@@ -1,0 +1,53 @@
+########################### Rhizostomins molecular analyses #########################
+#              Trinity, CD-Hit, Transdecoder, HMMER, IQTREE (command-line)          #
+#	      		    		 Author: Jonathan W. Lawley                             #
+#                           Used in: Lawley et al., 2021                            #
+#                        Rhizostomins: a novel pigment family                       #
+#                    from rhizostome jellyfish (Cnidaria, Scyphozoa)                #
+#                         in review @ Frontiers in Marine Science                   #
+#                                                                                   #
+#                    Used for phylogenetic analyses in Figs. 1-2 and                #
+#                Supplementary Figs. 1-2 (also see Supplementary Table 1)           #
+#                                                                                   #
+#               Contact: jonathan.wanderleylawley@griffithuni.edu.au                #
+
+
+### When necessary, sequence reads downloaded from NCBI SRA and TSA databases were assembled and translated as in steps 1-3 below. Following these steps, and for downloaded predicted protein data (NCBI Protein or directly from publications), see steps 4 onwards (protein domain search, alignment and phylogenetic analyses). More details on sequence data used in Supplementary Table 1 (also see 'Materials and Methods' section of the manuscript). Relevant codes below with Chrysaora fuscescens transcriptome data as an example, analysing the Kringle (KR) protein domain.
+
+
+## 1) Trinity assembly
+
+# If this is being done with forward and reverse reads retrieved from SRA's ftp server (use https://sra-explorer.info/ to obtain links to download the forward and reverse reads) - need to run it through fastq-trinity.py before using it in Trinity. Otherwise, if it was downloaded with fastq-dump (as recommended by trinity), it is fine to use it as input directly.
+
+Trinity --seqType fq --jaccard_clip --trimmomatic --no_normalize_reads --max_memory 32G --CPU 8 --inchworm_cpu 8 --SS_lib_type RF --left ~/scratch/SRA/SRR3180892_Tentacle_transcriptome_of_the_Pacific_sea_nettle_Chrysaora_fuscescens_1.fastq.gz --right ~/scratch/SRA/SRR3180892_Tentacle_transcriptome_of_the_Pacific_sea_nettle_Chrysaora_fuscescens_2.fastq.gz --output CHF-trinity.fa
+
+
+## 2) CD-Hit
+
+cd-hit-est -i ~/scratch/SRA/CHF-trinity.fa/Trinity.fasta -o ~/scratch/SRA/CHF-trinity.fa/CHF-cdhit.fasta -c 1 -n 11 -d 0 -M 6000 -T 8
+
+
+## 3) TransDecoder (part of the Trinity suite)
+
+TransDecoder.LongOrfs -t ~/scratch/SRA/CHF-trinity.fa/CHF-cdhit.fasta -m 50
+TransDecoder.Predict -t ~/scratch/SRA/CHF-trinity.fa/CHF-cdhit.fasta --single_best_only
+
+
+## 4) HMMER (hmmsearch) - this process was repeated for every predicted protein dataset
+
+esl-sfetch --index ~/scratch/SRA/CHF-trinity.fa/CHF-cdhit.fasta.transdecoder.pep
+hmmsearch --domtblout ~/scratch/SRA/CHF-trinity.fa/CHF-hits.dtbl -E 1e-05 ~/scratch/KR.hmm ~/scratch/SRA/CHF-trinity.fa/CHF-cdhit.fasta.transdecoder.pep > KR-CHF.out
+grep -v "^#" CHF-hits.dtbl | awk '{print $1}' | cat -n | sort -uk2 | sort -nk1 | cut -f2- | esl-sfetch -f ~/scratch/SRA/CHF-trinity.fa/CHF-cdhit.fasta.transdecoder.pep - > CHF-hits.fasta
+python sequence_cleaner.py CHF-hits.fasta #Biopyhton - https://biopython.org/wiki/Sequence_Cleaner
+
+
+## 5) HMMER (hmmalign) - sequences from each predicted protein dataset containing each protein domain searched were combined into a .fasta file for this step
+
+hmmalign KR.hmm KR-Rpulmo.fasta > KR-Rpulmo.stockholm
+python3 stockholmtofasta.py # based on Biopython - (edit the script to make it specific for each run).
+
+
+## 6) IQTREE - before this step, alignment from previous step was manually trimmed based on each domain's HMM logo from Pfam
+
+iqtree -s KR-Rpulmo-stk-trimgap.fasta -st AA -m TESTNEW -bb 10000 -alrt 10000 -nt AUTO
+
