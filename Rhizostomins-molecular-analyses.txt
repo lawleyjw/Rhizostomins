@@ -1,10 +1,10 @@
 ########################### Rhizostomins molecular analyses #########################
 #              Trinity, CD-Hit, Transdecoder, HMMER, IQTREE (command-line)          #
-#	      		    		 Author: Jonathan W. Lawley                             #
+#	      		    		         Author: Jonathan W. Lawley                             #
 #                           Used in: Lawley et al., 2021                            #
 #                        Rhizostomins: a novel pigment family                       #
 #                    from rhizostome jellyfish (Cnidaria, Scyphozoa)                #
-#                         in review @ Frontiers in Marine Science                   #
+#       Frontiers in Marine Science https://doi.org/10.3389/fmars.2021.752949       #
 #                                                                                   #
 #                    Used for phylogenetic analyses in Figs. 1-2 and                #
 #                Supplementary Figs. 1-2 (also see Supplementary Table 1)           #
